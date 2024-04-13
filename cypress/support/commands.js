@@ -23,6 +23,7 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+import 'cypress-iframe'
 
 // visitWithAdBlocker: Visits a page and blocks ads
 Cypress.Commands.add('visitWithAdBlocker', (url) => {
