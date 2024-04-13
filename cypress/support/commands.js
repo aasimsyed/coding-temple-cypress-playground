@@ -43,3 +43,9 @@ Cypress.Commands.add('visitWithAdBlocker', (url) => {
   // Visit the page
   cy.visit(url);
 });
+
+// enterFrame: Enters a frame by its selector
+Cypress.Commands.add('enterFrame', (selector) => {
+  return cy.get(selector).its('0.contentDocument.body').should('not.be.undefined')
+    .then(cy.wrap);
+});
