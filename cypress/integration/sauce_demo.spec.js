@@ -2,7 +2,7 @@
 describe('Sauce Demo Tests', () => {
   beforeEach(() => {
      // Visits the Sauce Demo website before each test
-    cy.visitWithAdBlocker('http://www.saucedemo.com');
+    cy.visitWithAdBlocker('https://www.saucedemo.com');
   });
 
   it('TC_1: Successfully logs in as a standard user', () => {
