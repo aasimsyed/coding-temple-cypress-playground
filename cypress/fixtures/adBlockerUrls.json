@@ -1,0 +1,12 @@
+{
+  "blockAds": "https://pagead2.googlesyndication.com/**",
+  "blockGpt": "https://www.googletagservices.com/tag/js/gpt.js",
+  "blockGtm": "https://www.googletagmanager.com/gtm.js?id=GTM-MX8DD4S",
+  "blockAdPlus": "https://cdn.ad.plus/player/adplus.js",
+  "blockBacktrace": "https://events.backtrace.io/**",
+  "blockGif": "**/*.gif",
+  "blockUserMatch": "**/usermatch.gif**",
+  "blockMerge": "**/merge**",
+  "blockScripts": "**/*.js"
+}
+
