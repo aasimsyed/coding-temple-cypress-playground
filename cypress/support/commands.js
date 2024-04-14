@@ -1,56 +1,46 @@
 import 'cypress-iframe';
 
+// Helper function to log and throw errors
+function logAndThrow(message) {
+  cy.log(message);
+  throw new Error(message);
+}
+
 // Custom command to visit a URL with ad blockers enabled
 Cypress.Commands.add('visitWithAdBlocker', (url) => {
-  cy.fixture('adBlockerUrls').then((urls) => {
+  cy.fixture('adBlockerUrls').then(urls => {
     try {
-      Object.keys(urls).forEach((key) => {
-        if (key === 'blockScripts') {
-          cy.intercept(urls[key], {
-            onResponse: (req) => {
-              if (req.url.includes('google') || req.url.includes('adsbygoogle')) {
-                req.destroy();
-              }
-            },
-            log: false
-          }).as(key);
-        } else {
-          // Intercept and stub response without any conditions
-          cy.intercept(urls[key], {
-            statusCode: 200,
-            body: '',
-            log: false
-          }).as(key);
-        }
+      Object.entries(urls).forEach(([key, value]) => {
+        cy.intercept(value, {
+          statusCode: key === 'blockScripts' ? undefined : 200,
+          body: key === 'blockScripts' ? undefined : '',
+          onResponse: key === 'blockScripts' ? (req) => {
+            if (req.url.includes('google') || req.url.includes('adsbygoogle')) {
+              req.destroy();
+            }
+          } : undefined,
+          log: false
+        }).as(key);
       });
-      cy.visit(url).then(() => {
-        cy.log('Visited with ad blockers set up successfully.');
-      });
+      cy.visit(url).then(() => cy.log('Visited with ad blockers set up successfully.'));
     } catch (error) {
-      cy.log('Ad Blocker setup failed.');
-      throw new Error(`Ad Blocker setup error: ${error.message}`);
+      logAndThrow(`Ad Blocker setup error: ${error.message}`);
     }
   });
 });
 
 // Custom command for logging into a site
 Cypress.Commands.add('login', (username, password) => {
-  cy.get('[data-test="username"]').type(username).then(($username) => {
-    if (!$username.val()) throw new Error('Failed to type the username');
-  });
-  cy.get('[data-test="password"]').type(password).then(($password) => {
-    if (!$password.val()) throw new Error('Failed to type the password');
-  });
-  cy.get('[data-test="login-button"]').click().then(($button) => {
-    if ($button.is(':disabled')) throw new Error('Login button is disabled');
-  });
+  cy.get('[data-test="username"]').type(username, { log: false }).should('have.value', username);
+  cy.get('[data-test="password"]').type(password, { log: false }).should('have.value', password);
+  cy.get('#login-button').click();
 });
 
 // Custom command to login with a user type from a fixture
 Cypress.Commands.add('loginWithFixture', (userType) => {
-  cy.fixture('credentials').then((credentials) => {
+  cy.fixture('credentials').then(credentials => {
     const user = credentials.users[userType];
-    if (!user) throw new Error('User type not found in fixture');
+    if (!user) logAndThrow('User type not found in fixture');
     cy.login(user.username, user.password);
   });
 });
@@ -58,18 +48,14 @@ Cypress.Commands.add('loginWithFixture', (userType) => {
 // Custom command to add an item to the cart by name
 Cypress.Commands.add('addItemToCartByName', (itemName) => {
   cy.contains('.inventory_item_name', itemName).parents('.inventory_item').within(() => {
-    cy.get('.btn_inventory').click().then(($btn) => {
-      if (!$btn.hasClass('btn_inventory')) throw new Error('Add to cart button not found');
-    });
+    cy.get('.btn_inventory').click().should('have.class', 'btn_inventory');
   });
 });
 
 // Custom command to add all items to the cart
 Cypress.Commands.add('addAllItemsToCart', () => {
-  cy.get('.inventory_item').each((element) => {
-    cy.wrap(element).find('.btn_inventory').click().then(($btn) => {
-      if (!$btn.hasClass('btn_inventory')) throw new Error('Add to cart button not found');
-    });
+  cy.get('.inventory_item').each(element => {
+    cy.wrap(element).find('.btn_inventory').click();
   });
 });
 
@@ -86,7 +72,6 @@ Cypress.Commands.add('completeCheckout', (firstName, lastName, zipCode) => {
 
 // Overwriting the 'visit' command to always disable the cache
 Cypress.Commands.overwrite('visit', (originalFn, url, options) => {
-  // This will append a cache busting query param to each visit
   const noCacheStr = `_noCache=${Math.random()}`;
   url = url.includes('?') ? `${url}&${noCacheStr}` : `${url}?${noCacheStr}`;
   return originalFn(url, options);
