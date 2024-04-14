@@ -6,7 +6,6 @@ Cypress.Commands.add('visitWithAdBlocker', (url) => {
     try {
       Object.keys(urls).forEach((key) => {
         if (key === 'blockScripts') {
-          // Use middleware to modify requests conditionally and control logging
           cy.intercept(urls[key], {
             onResponse: (req) => {
               if (req.url.includes('google') || req.url.includes('adsbygoogle')) {
