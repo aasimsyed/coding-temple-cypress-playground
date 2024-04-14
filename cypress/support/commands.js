@@ -5,15 +5,23 @@ Cypress.Commands.add('visitWithAdBlocker', (url) => {
   cy.fixture('adBlockerUrls').then((urls) => {
     try {
       Object.keys(urls).forEach((key) => {
-        const routeMatcher = { statusCode: 200, body: '' };
         if (key === 'blockScripts') {
-          cy.intercept(urls[key], (req) => {
-            if (req.url.includes('google') || req.url.includes('adsbygoogle')) {
-              req.destroy();
-            }
+          // Use middleware to modify requests conditionally and control logging
+          cy.intercept(urls[key], {
+            onResponse: (req) => {
+              if (req.url.includes('google') || req.url.includes('adsbygoogle')) {
+                req.destroy();
+              }
+            },
+            log: false
           }).as(key);
         } else {
-          cy.intercept(urls[key], routeMatcher).as(key);
+          // Intercept and stub response without any conditions
+          cy.intercept(urls[key], {
+            statusCode: 200,
+            body: '',
+            log: false
+          }).as(key);
         }
       });
       cy.visit(url).then(() => {
