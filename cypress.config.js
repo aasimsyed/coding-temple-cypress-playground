@@ -2,6 +2,9 @@ const { defineConfig } = require("cypress");
 
 module.exports = defineConfig({
   e2e: {
+    env: {
+      restfulBookerUrl: 'https://restful-booker.herokuapp.com'
+    },
     chromeWebSecurity: false,
     supportFile: 'cypress/support/commands.js',
     specPattern: [
@@ -10,6 +13,6 @@ module.exports = defineConfig({
     ],
     setupNodeEvents(on, config) {
       // implement node event listeners here
-    },
-  },
+    }
+  }
 });
