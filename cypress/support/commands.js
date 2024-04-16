@@ -71,8 +71,37 @@ Cypress.Commands.add('completeCheckout', (firstName, lastName, zipCode) => {
 });
 
 // Overwriting the 'visit' command to always disable the cache
-Cypress.Commands.overwrite('visit', (originalFn, url, options) => {
-  const noCacheStr = `_noCache=${Math.random()}`;
-  url = url.includes('?') ? `${url}&${noCacheStr}` : `${url}?${noCacheStr}`;
+Cypress.Commands.overwrite('visit', (originalFn, url, options = {}) => {
+  options.headers = options.headers || {};
+  options.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+
   return originalFn(url, options);
+});
+
+Cypress.Commands.add('apiRequest', (method, endpoint, token = null, body = null, qs = {}) => {
+  const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const options = {
+    method: method,
+    url: `${Cypress.env('restfulBookerUrl')}${endpoint}`,
+    headers: headers,
+    qs: qs
+  };
+
+  if (body && ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
+    options.body = body;
+  }
+
+  return cy.request(options);
+});
+
+Cypress.Commands.add('createBooking', (bookingDetails, token) => {
+  cy.apiRequest('POST', '/booking', token, bookingDetails);
 });
