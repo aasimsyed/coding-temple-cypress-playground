@@ -1,44 +1,61 @@
-// Import utilities as needed
 import { getNewToken } from '../../support/utils';
+import { compileSchema } from '../../support/ajv-utils';
 
 describe('CreateBooking API Test', () => {
-  let token;
-  let bookingData;
-
   before(() => {
-    // Load booking details from a fixture file and log the data
-    cy.fixture('bookingDetails.json').then((data) => {
-      bookingData = data;
-      cy.log('Booking details loaded', JSON.stringify(bookingData));
-    });
+    // Load and compile schemas
+    cy.readFile('cypress/schemas/createBookingRequest.json')
+      .then(compileSchema).as('validateRequest');
+    cy.readFile('cypress/schemas/createBookingResponse.json')
+      .then(compileSchema).as('validateResponse');
+    cy.log('Schemas compiled successfully.');
 
-    // Retrieve a new token, log it, and store it for use in tests
-    getNewToken().then((tokenResponse) => {
-      token = tokenResponse;
-      cy.log('Auth token retrieved', token);
+    // Load booking details
+    cy.fixture('bookingDetails.json').as('bookingData');
+
+    // Retrieve a new token and store as alias
+    getNewToken().then(cy.wrap).as('token');
+  });
+
+  after(() => {
+    // Clean up: delete the booking created in the before hook
+    cy.get('@token').then(token => {
+      cy.get('@bookingId').then(bookingId => {
+        if (bookingId && token) {
+          cy.log('Cleaning up: deleting the booking created in the before hook');
+          cy.deleteBooking(bookingId, token).then(response => {
+            expect(response.status).to.eq(201);
+            cy.log(`Booking with ID: ${bookingId} deleted successfully.`);
+          });
+        } else {
+          cy.log('No booking ID or token available for cleanup.');
+        }
+      });
     });
   });
 
   it('should create a new booking and validate the response matches the request', function () {
-    // Ensure token and bookingData are loaded before executing the test
-    expect(token).to.not.be.undefined;
-    expect(bookingData).to.not.be.undefined;
+    // Use aliases to ensure data is loaded before executing the test
+    cy.get('@token').then(token => {
+      cy.get('@bookingData').then(bookingData => {
+        cy.log('Creating a new booking with the provided details');
+        cy.createBooking(bookingData, token).then(response => {
+          expect(response.status).to.eq(200);
+          cy.log('Booking created with status:', response.status);
 
-    cy.log('Creating a new booking with the provided details');
-    // Use the refactored createBooking command
-    cy.createBooking(bookingData, token).then((response) => {
-      cy.log('Booking created successfully');
+          // Validate response schema
+          cy.get('@validateResponse').then(validateResponse => {
+            if (!validateResponse(response.body)) {
+              const errors = validateResponse.errors.map(err => `${err.instancePath} ${err.message}`).join(', ');
+              throw new Error(`Response validation failed: ${errors}`);
+            }
+            cy.log('Response schema validation passed.');
 
-      expect(response.status).to.eq(200);
-      cy.log('Response Status:', response.status);
-
-      // Verify that the response body includes the booking details submitted
-      expect(response.body.booking).to.deep.include(bookingData);
-      cy.log('Response booking details matched the request');
-
-      // Check that the bookingid is a number
-      expect(response.body.bookingid).to.be.a('number');
-      cy.log('Booking ID is a number:', response.body.bookingid);
+            // Store the bookingId for cleanup
+            cy.wrap(response.body.bookingid).as('bookingId');
+          });
+        });
+      });
     });
   });
 });

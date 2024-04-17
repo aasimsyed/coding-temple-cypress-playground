@@ -1,47 +1,38 @@
+import { compileSchema } from '../../support/ajv-utils';
+
 describe('Get Booking IDs API Tests', () => {
+  let validateResponse;
+
   before(() => {
+    // Load and compile the schema for response validation
+    cy.readFile('cypress/schemas/getBookingIdsResponse.json')
+      .then(compileSchema)
+      .then((compiledSchema) => {
+        validateResponse = compiledSchema;
+        cy.log('Response schema compiled successfully.');
+      });
+
     cy.log('Starting tests for the GetBookingIds endpoint');
   });
 
-  it('should retrieve all booking IDs', () => {
-    cy.apiRequest('GET', '/booking').then((response) => {
-      expect(response.status).to.eq(200);
-      expect(response.body).to.be.an('array');
-      cy.log('Total bookings found:', response.body.length);
-    }).then(response => {
-      console.log('Response:', response);
+  // Helper function to perform API request and validate the response
+  const testBookingRetrieval = (description, queryParams = {}) => {
+    it(`should retrieve bookings ${description}`, () => {
+      cy.apiRequest('GET', '/booking', null, null, queryParams).then((response) => {
+        expect(response.status).to.eq(200);
+        if (!validateResponse(response.body)) {
+          const errors = validateResponse.errors.map(err => `${err.instancePath} ${err.message}`).join(', ');
+          throw new Error(`Response validation failed: ${errors}`);
+        }
+        cy.log(`Bookings ${description}:`, JSON.stringify(response.body));
+      });
     });
-  });
+  };
 
-  it('should retrieve bookings by first name', () => {
-    cy.apiRequest('GET', '/booking', null, null, { firstname: 'Jim' }).then((response) => {
-      expect(response.status).to.eq(200);
-      expect(response.body).to.be.an('array');
-      cy.log(`Bookings with firstname Jim: ${JSON.stringify(response.body)}`);
-    });
-  });
-
-  it('should retrieve bookings by last name', () => {
-    cy.apiRequest('GET', '/booking', null, null, { lastname: 'Brown' }).then((response) => {
-      expect(response.status).to.eq(200);
-      expect(response.body).to.be.an('array');
-      cy.log(`Bookings with lastname Brown: ${JSON.stringify(response.body)}`);
-    });
-  });
-  
-  it('should retrieve bookings by check-in date', () => {
-    cy.apiRequest('GET', '/booking', null, null, { checkin: '2021-01-01' }).then((response) => {
-      expect(response.status).to.eq(200);
-      expect(response.body).to.be.an('array');
-      cy.log(`Bookings with check-in on 2021-01-01: ${JSON.stringify(response.body)}`);
-    });
-  });  
-
-  it('should retrieve bookings by check-out date', () => {
-    cy.apiRequest('GET', '/booking', null, null, { checkout: '2021-01-02' }).then((response) => {
-      expect(response.status).to.eq(200);
-      expect(response.body).to.be.an('array');
-      cy.log(`Bookings with check-out on 2021-01-02: ${JSON.stringify(response.body)}`);
-    });
-  });
+  // Test cases using the helper function
+  testBookingRetrieval('for all booking IDs');
+  testBookingRetrieval('by first name', { firstname: 'Jim' });
+  testBookingRetrieval('by last name', { lastname: 'Brown' });
+  testBookingRetrieval('by check-in date', { checkin: '2021-01-01' });
+  testBookingRetrieval('by check-out date', { checkout: '2021-01-02' });
 });

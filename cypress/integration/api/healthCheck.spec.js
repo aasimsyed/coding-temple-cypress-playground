@@ -1,11 +1,8 @@
 describe('Health Check API Test', () => {
   it('Ping the API for a health check', () => {
-    const baseUrl = Cypress.env('restfulBookerUrl');
-    cy.request({
-      method: 'GET',
-      url: `${baseUrl}/ping`,
-    }).then((response) => {
-      expect(response.status).to.eq(201);
+    cy.apiRequest('GET', '/ping').then((response) => {
+      expect(response.status).to.eq(201);  // Expecting a 201 status as per your API docs
+      cy.log('API health check response status:', response.status);
     });
   });
 });

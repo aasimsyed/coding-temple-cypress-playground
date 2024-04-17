@@ -1,20 +1,31 @@
+import { compileSchema } from '../../support/ajv-utils';
+
 describe('CreateToken API Test', () => {
+  before(() => {
+    // Load and compile the schema, then store it as an alias for use in the tests
+    cy.readFile('cypress/schemas/createTokenResponse.json')
+      .then(compileSchema)
+      .as('validateTokenSchema'); // Storing the compiled schema as an alias
+    cy.log('Token schema compiled and stored as an alias.');
+  });
+
   it('should create a new auth token', () => {
-    cy.request({
-      method: 'POST',
-      url: 'https://restful-booker.herokuapp.com/auth',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: {
-        username: 'admin',
-        password: 'password123',
-      },
+    cy.apiRequest('POST', '/auth', null, {
+      username: 'admin',
+      password: 'password123',
     }).then((response) => {
       expect(response.status).to.eq(200);
-      expect(response.body).to.have.property('token');
-      expect(response.body.token).to.match(/^[a-z0-9]{15}$/,
-       'Token matches the expected alphanumeric 15 characters format');
+      cy.log('Auth token created, validating response...');
+
+      // Use the alias for the schema to validate the response
+      cy.get('@validateTokenSchema').then((validate) => {
+        const validationResult = validate(response.body);
+        if (!validationResult) {
+          const errors = validate.errors.map(err => `${err.instancePath} ${err.message}`).join(', ');
+          throw new Error(`Validation error: ${errors}`);
+        }
+        cy.log('Response validated successfully against the schema.');
+      });
     });
   });
 });
