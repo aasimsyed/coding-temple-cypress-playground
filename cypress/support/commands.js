@@ -78,14 +78,16 @@ Cypress.Commands.overwrite('visit', (originalFn, url, options = {}) => {
   return originalFn(url, options);
 });
 
-Cypress.Commands.add('apiRequest', (method, endpoint, token = null, body = null, qs = {}) => {
+Cypress.Commands.add('apiRequest', (method, endpoint, auth = {}, body = null, qs = {}) => {
   const headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  // Check the type of authentication and set headers accordingly
+  cy.log('Auth:', JSON.stringify(auth));
+  if (auth) {
+    headers['Cookie'] = `token=${auth}`;
   }
 
   const options = {
@@ -99,9 +101,22 @@ Cypress.Commands.add('apiRequest', (method, endpoint, token = null, body = null,
     options.body = body;
   }
 
+  cy.log('Sending API request with options:', JSON.stringify(options));
+
   return cy.request(options);
 });
 
 Cypress.Commands.add('createBooking', (bookingDetails, token) => {
   cy.apiRequest('POST', '/booking', token, bookingDetails);
+});
+
+Cypress.Commands.add('deleteBooking', (bookingId, token) => {
+  // Using the custom apiRequest command which encapsulates request details
+  return cy.apiRequest('DELETE', `/booking/${bookingId}`, token)
+    .then(response => {
+      if (response.status !== 200 && response.status !== 201) {
+        throw new Error(`Failed to delete booking with ID ${bookingId}: Status code ${response.status}`);
+      }
+      return response;
+    });
 });
