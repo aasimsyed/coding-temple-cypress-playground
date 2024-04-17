@@ -46,7 +46,6 @@ npx cypress run
 The cypress.config.js file is configured to handle environment variables and setup preferences:
 
 ```javascript
-Copy code
 const { defineConfig } = require("cypress");
 
 module.exports = defineConfig({
