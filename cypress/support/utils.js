@@ -1,8 +1,7 @@
-// cypress/support/utils.js
 export const getNewToken = () => {
   return cy.request({
     method: 'POST',
-    url: 'https://restful-booker.herokuapp.com/auth',
+    url: `${Cypress.env('restfulBookerUrl')}/auth`,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -11,7 +10,11 @@ export const getNewToken = () => {
       password: 'password123',
     },
   }).then((response) => {
-    expect(response.status).to.eq(200);
-    return response.body.token;
+    // Optionally handle non-200 responses more gracefully here
+    if (response.status === 200 && response.body.token) {
+      return response.body.token;
+    } else {
+      throw new Error('Failed to retrieve token or invalid response');
+    }
   });
 };
