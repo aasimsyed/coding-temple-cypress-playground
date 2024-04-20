@@ -26,5 +26,5 @@ jobs:
         run: npm install
       
       - name: Run tests
-        run: npx cypress run --record --parallel --group ${{ matrix.containers }}
+        run: npx cypress run --parallel --group ${{ matrix.containers }}
 
