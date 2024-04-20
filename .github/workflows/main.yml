@@ -36,7 +36,8 @@ jobs:
       
       - name: Check Cypress binary
         run: |
-          if [ ! -f $(npm bin)/cypress ]; then
+          CYPRESS_BINARY_PATH=$(npm bin)/../.cache/Cypress/*/Cypress/Cypress
+          if [ ! -f "$CYPRESS_BINARY_PATH" ]; then
             echo "Cypress binary not found. Installing..."
             npx cypress install
           fi
