@@ -14,10 +14,17 @@ jobs:
         include:
           - test-type: 'api'
           - test-type: 'e2e'
-        
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      
+      - name: Cache Cypress binary
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-binary-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: cypress-${{ runner.os }}-binary-
       
       - name: Set up Node.js
         uses: actions/setup-node@v2
@@ -26,6 +33,16 @@ jobs:
       
       - name: Install dependencies
         run: npm install
+      
+      - name: Check Cypress binary
+        run: |
+          if [ ! -f $(npm bin)/cypress ]; then
+            echo "Cypress binary not found. Installing..."
+            npx cypress install
+          fi
+      
+      - name: Verify Cypress binary
+        run: npx cypress verify
       
       - name: Run API tests
         if: ${{ matrix.test-type == 'api' }}
