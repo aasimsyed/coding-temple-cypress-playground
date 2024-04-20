@@ -11,7 +11,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3]
+        include:
+          - test-type: 'api'
+          - test-type: 'e2e'
         
     steps:
       - name: Checkout code
@@ -20,11 +22,15 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '21'
       
       - name: Install dependencies
         run: npm install
       
-      - name: Run tests
-        run: npx cypress run ${{ matrix.containers }}
-
+      - name: Run API tests
+        if: ${{ matrix.test-type == 'api' }}
+        run: npx cypress run --spec "cypress/integration/api/**/*"
+      
+      - name: Run e2e tests
+        if: ${{ matrix.test-type == 'e2e' }}
+        run: npx cypress run --spec "cypress/integration/e2e/**/*"
