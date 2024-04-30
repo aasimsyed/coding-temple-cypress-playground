@@ -7,6 +7,7 @@ on:
 
 jobs:
   zap_scan:
+    permissions: write-all
     runs-on: ubuntu-latest
     name: OWASP ZAP Baseline Scan of OWASP Juice Shop
     steps:
@@ -18,3 +19,4 @@ jobs:
         with:
           target: "https://juice-shop.herokuapp.com/#"
           artifact_name: "zap_report.html"
+          
