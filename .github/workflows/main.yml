@@ -3,47 +3,17 @@ name: CI
 on:
   push:
     branches:
-      - feature/integrate-github-actions
+      - feature/implement-owasp-zap-baseline-scan-github-actions
 
 jobs:
-  test:
+  zap_scan:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - test-type: 'api'
-          - test-type: 'e2e'
-
+    name: OWASP ZAP Baseline Scan of OWASP Juice Shop
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
-      - name: Cache Cypress binary
-        uses: actions/cache@v2
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
         with:
-          path: ~/.cache/Cypress
-          key: cypress-${{ runner.os }}-binary-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: cypress-${{ runner.os }}-binary-
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '21'
-      
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Install Cypress binary
-        run: npm install cypress
-      
-      - name: Verify Cypress binary
-        run: npx cypress verify
-      
-      - name: Run API tests
-        if: ${{ matrix.test-type == 'api' }}
-        run: npx cypress run --spec "cypress/integration/api/**/*"
-      
-      - name: Run e2e tests
-        if: ${{ matrix.test-type == 'e2e' }}
-        run: npx cypress run --spec "cypress/integration/e2e/**/*"
+          target: "https://juice-shop.herokuapp.com/#"
