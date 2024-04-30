@@ -1,0 +1,11 @@
+{
+  "firstname": "UpdatedFirstName",
+  "lastname": "UpdatedLastName",
+  "totalprice": 200,
+  "depositpaid": false,
+  "bookingdates": {
+    "checkin": "2023-01-10",
+    "checkout": "2023-01-15"
+  },
+  "additionalneeds": "Late checkout"
+}

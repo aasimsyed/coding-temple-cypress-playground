@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - feature/implement-owasp-zap-baseline-scan-github-actions
+
+jobs:
+  zap_scan:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    name: OWASP ZAP Baseline Scan of OWASP Juice Shop
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: "https://juice-shop.herokuapp.com/#"
+          artifact_name: "zap_report.html"
+          
