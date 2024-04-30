@@ -17,3 +17,4 @@ jobs:
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: "https://juice-shop.herokuapp.com/#"
+          artifact_name: "zap_report.html"
